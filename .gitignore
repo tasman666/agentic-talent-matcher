@@ -1,0 +1,10 @@
+/.python-version
+/__pycache__
+/venv
+sources/                
+chat_history.jsonl  
+*.pdf
+*.mp3
+*.wav    
+# --- OS Specifics ---
+.DS_Store               # Mac specific junk
