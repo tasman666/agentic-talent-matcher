@@ -13,10 +13,10 @@ from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from langgraph.prebuilt import create_react_agent
 
-from app.config import get_settings
-from app.services.llm_factory import create_llm
-from app.services.ciklum_jobs import search_ciklum_jobs
-from app.services.linkedin_jobs import search_linkedin_jobs
+from config import get_settings
+from services.llm_factory import create_llm
+from services.ciklum_jobs import search_ciklum_jobs
+from services.linkedin_jobs import search_linkedin_jobs
 
 
 # ---------------------------------------------------------------------------
@@ -175,4 +175,3 @@ async def run_talent_agent(query: str) -> str:
             return _extract_text_content(msg.content)
 
     return "Agent did not produce a response."
-

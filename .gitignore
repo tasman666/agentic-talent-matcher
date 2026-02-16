@@ -1,7 +1,7 @@
 /.python-version
 .env
-app/__pycache__
-app/services/__pycache__
+__pycache__
+services/__pycache__
 /venv
 sources/                
 chat_history.jsonl  

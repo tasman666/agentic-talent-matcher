@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.routes import router
-from app.config import get_settings
+from routes import router
+from config import get_settings
 
 app = FastAPI(title="Agentic Talent Matcher")
 

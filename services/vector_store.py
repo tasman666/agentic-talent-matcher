@@ -1,7 +1,7 @@
 from qdrant_client import QdrantClient, models
 from uuid import uuid4
 
-from app.config import get_settings
+from config import get_settings
 
 
 class VectorStoreService:

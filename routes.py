@@ -1,8 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, Depends
-from app.services.pdf_service import PDFService
-from app.services.vector_store import VectorStoreService
-from app.services.agent import run_talent_agent
-from app.schemas import SearchResponse, SearchResult, AgentRequest, AgentResponse
+from services.pdf_service import PDFService
+from services.vector_store import VectorStoreService
+from services.agent import run_talent_agent
+from schemas import SearchResponse, SearchResult, AgentRequest, AgentResponse
 
 router = APIRouter()
 

@@ -2,7 +2,7 @@ from langchain_experimental.text_splitter import SemanticChunker
 from langchain_community.embeddings import HuggingFaceEmbeddings
 import fitz
 
-from app.config import get_settings
+from config import get_settings
 
 
 class PDFService:
