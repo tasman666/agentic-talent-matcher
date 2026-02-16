@@ -18,3 +18,21 @@ class AgentRequest(BaseModel):
 class AgentResponse(BaseModel):
     query: str
     response: str
+
+class EvaluationDetail(BaseModel):
+    score: float
+    reasoning: str
+
+class EvaluationResult(BaseModel):
+    relevance: EvaluationDetail
+    clarity: EvaluationDetail
+    accuracy: EvaluationDetail
+    overall: float
+
+class EvaluationRequest(BaseModel):
+    query: str
+    response: str
+    context: str = ""
+
+class EvaluationResponse(BaseModel):
+    metrics: EvaluationResult

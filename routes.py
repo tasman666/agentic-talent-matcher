@@ -2,7 +2,11 @@ from fastapi import APIRouter, UploadFile, File, Depends
 from services.pdf_service import PDFService
 from services.vector_store import VectorStoreService
 from services.agent import run_talent_agent
-from schemas import SearchResponse, SearchResult, AgentRequest, AgentResponse
+from services.evaluation import evaluate_agent_response
+from schemas import (
+    SearchResponse, SearchResult, AgentRequest, AgentResponse,
+    EvaluationRequest, EvaluationResponse, EvaluationResult
+)
 
 router = APIRouter()
 
@@ -58,3 +62,30 @@ async def agent_match(request: AgentRequest):
     """
     result = await run_talent_agent(request.query)
     return AgentResponse(query=request.query, response=result)
+
+
+@router.post("/agent/evaluate", response_model=EvaluationResponse)
+async def evaluate_match(request: EvaluationRequest):
+    """
+    Evaluate an agent's response for Relevance, Clarity, and Accuracy.
+    Uses an LLM-as-a-Judge approach.
+    """
+    result = await evaluate_agent_response(
+        query=request.query,
+        response=request.response,
+        context=request.context
+    )
+    
+    # Map the service result (EvaluationResult from service) to 
+    # the schema (EvaluationResult from schemas) if they differ,
+    # or just return it directly if fields align.
+    # Our schema structure matches the service output structure.
+    
+    return EvaluationResponse(
+        metrics=EvaluationResult(
+            relevance=result.relevance,
+            clarity=result.clarity,
+            accuracy=result.accuracy,
+            overall=result.overall_score
+        )
+    )
