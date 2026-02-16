@@ -1,13 +1,16 @@
 from qdrant_client import QdrantClient, models
 from uuid import uuid4
 
+from app.config import get_settings
+
 
 class VectorStoreService:
-    def __init__(self, collection_name: str = "candidates"):
+    def __init__(self):
+        settings = get_settings()
         self.client = QdrantClient(":memory:")
-        self.client.set_model("sentence-transformers/all-MiniLM-L6-v2")
-        self.client.set_sparse_model("prithivida/Splade_PP_en_v1")
-        self.collection_name = collection_name
+        self.client.set_model(settings.embedding_model_name)
+        self.client.set_sparse_model(settings.sparse_embedding_model_name)
+        self.collection_name = settings.vector_store_collection
 
     def upsert_chunks(self, chunks: list[str], filename: str):
         ids = [str(uuid4()) for _ in chunks]

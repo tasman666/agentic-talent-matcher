@@ -4,16 +4,16 @@ Uses LangChain + OpenAI to orchestrate candidate search and job matching
 across multiple sources: local CV database, Ciklum careers, and LinkedIn.
 """
 
-import os
 import json
 import httpx
 from typing import Optional
 
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage
 from langgraph.prebuilt import create_react_agent
 
+from app.config import get_settings
 from app.services.ciklum_jobs import search_ciklum_jobs
 from app.services.linkedin_jobs import search_linkedin_jobs
 
@@ -33,10 +33,12 @@ def search_candidates(query: str, limit: int = 5) -> str:
         query: Natural-language search query (e.g. "Senior Java developer with Spring Boot experience").
         limit: Maximum number of candidate results to return (default 5).
     """
+    settings = get_settings()
+    base_url = f"http://localhost:{settings.app_port}"
     try:
         with httpx.Client(timeout=30.0) as client:
             response = client.get(
-                "http://localhost:8000/search/",
+                f"{base_url}/search/",
                 params={"query": query, "limit": limit},
             )
             response.raise_for_status()
@@ -111,9 +113,12 @@ TOOLS = [search_candidates, find_ciklum_jobs, find_linkedin_jobs]
 
 def create_talent_agent():
     """Create and return the talent matching agent."""
+    settings = get_settings()
+
     llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0,
+        model=settings.llm_model_name,
+        temperature=settings.llm_temperature,
+        api_key=settings.llm_api_key,
     )
 
     agent = create_react_agent(
