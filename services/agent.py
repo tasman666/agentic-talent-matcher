@@ -105,7 +105,7 @@ After gathering results from all sources, provide a comprehensive summary:
 - Provide a brief recommendation on the best matches
 
 Be concise but thorough. Always search ALL three sources before providing
-your final answer. Use multiple search queries if the initial results
+your final answer (unless query specify only one specificsource). Use multiple search queries if the initial results
 aren't specific enough.
 """
 
