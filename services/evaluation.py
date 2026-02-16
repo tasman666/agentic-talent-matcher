@@ -53,21 +53,46 @@ Return a JSON object with the following structure:
 async def evaluate_agent_response(
     query: str,
     response: str,
-    context: str = "No explicit context provided.",
+    context: str = "",
+    vector_store_service=None,  # Avoiding circular import type hint here
 ) -> EvaluationResult:
     """
     Evaluates the agent's response using an LLM judge.
     Returns the schema-defined EvaluationResult.
+
+    If context is empty and vector_store_service is provided,
+    it automatically searches for relevant context.
     """
     settings = get_settings()
 
-    # Use a capable model for evaluation (default to configured LLM)
+    # Determine which LLM config to use (Evaluation specific or default)
+    judge_model = settings.evaluation_llm_model_name or settings.llm_model_name
+    judge_api_key = settings.evaluation_llm_api_key or settings.llm_api_key
+    judge_base_url = settings.evaluation_llm_base_url or settings.llm_base_url
+    judge_temp = settings.evaluation_llm_temperature or 0.0
+
+    # Initialize the Judge LLM
     llm = create_llm(
-        model_name=settings.llm_model_name,
-        api_key=settings.llm_api_key,
-        base_url=settings.llm_base_url,
-        temperature=0.0,
+        model_name=judge_model,
+        api_key=judge_api_key,
+        base_url=judge_base_url,
+        temperature=judge_temp,
     )
+
+    # Automatic context retrieval if needed
+    if not context and vector_store_service:
+        try:
+            # Fetch top 3 relevant chunks as context
+            results = vector_store_service.search_hybrid(query, limit=3)
+            context = "\n\n".join([
+                f"Source: {r.metadata.get('filename', 'unknown')}\nContent: {r.document}"
+                for r in results
+            ])
+        except Exception as e:
+            context = f"Error retrieving context: {str(e)}"
+    
+    if not context:
+        context = "No explicit context provided."
 
     prompt = ChatPromptTemplate.from_template(EVALUATION_PROMPT)
     chain = prompt | llm | JsonOutputParser()

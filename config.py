@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     llm_base_url: str | None = None  # For local/custom endpoints (e.g. Ollama, LM Studio)
     llm_temperature: float = 0.0
 
+    # --- Evaluation LLM (Judge) ---
+    evaluation_llm_model_name: str | None = None
+    evaluation_llm_api_key: str | None = None
+    evaluation_llm_base_url: str | None = None
+    evaluation_llm_temperature: float = 0.0
+
     # --- Embedding / Semantic Chunker ---
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     sparse_embedding_model_name: str = "prithivida/Splade_PP_en_v1"

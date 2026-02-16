@@ -65,7 +65,10 @@ async def agent_match(request: AgentRequest):
 
 
 @router.post("/agent/evaluate", response_model=EvaluationResponse)
-async def evaluate_match(request: EvaluationRequest):
+async def evaluate_match(
+    request: EvaluationRequest,
+    vector_store: VectorStoreService = Depends(get_vector_store)
+):
     """
     Evaluate an agent's response for Relevance, Clarity, and Accuracy.
     Uses an LLM-as-a-Judge approach.
@@ -73,7 +76,8 @@ async def evaluate_match(request: EvaluationRequest):
     result = await evaluate_agent_response(
         query=request.query,
         response=request.response,
-        context=request.context
+        context=request.context,
+        vector_store_service=vector_store
     )
     
     # Map the service result (EvaluationResult from service) to 
