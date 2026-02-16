@@ -11,3 +11,10 @@ class SearchResult(BaseModel):
 class SearchResponse(BaseModel):
     query: str
     results: List[SearchResult]
+
+class AgentRequest(BaseModel):
+    query: str
+
+class AgentResponse(BaseModel):
+    query: str
+    response: str

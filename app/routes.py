@@ -1,7 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, Depends
 from app.services.pdf_service import PDFService
 from app.services.vector_store import VectorStoreService
-from app.schemas import SearchResponse, SearchResult
+from app.services.agent import run_talent_agent
+from app.schemas import SearchResponse, SearchResult, AgentRequest, AgentResponse
 
 router = APIRouter()
 
@@ -46,3 +47,14 @@ async def search_cvs(
     ]
     
     return SearchResponse(query=query, results=formatted_results)
+
+
+@router.post("/agent/match", response_model=AgentResponse)
+async def agent_match(request: AgentRequest):
+    """
+    Use the AI agent to find the best job matches for a candidate.
+    The agent searches the internal CV database, Ciklum careers,
+    and LinkedIn to provide a comprehensive recommendation.
+    """
+    result = await run_talent_agent(request.query)
+    return AgentResponse(query=request.query, response=result)
