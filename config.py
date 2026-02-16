@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # --- LLM ---
     llm_model_name: str = "gpt-4o-mini"
     llm_api_key: str = ""
+    llm_base_url: str | None = None  # For local/custom endpoints (e.g. Ollama, LM Studio)
     llm_temperature: float = 0.0
 
     # --- Embedding / Semantic Chunker ---

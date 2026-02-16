@@ -17,19 +17,15 @@ from langchain_core.language_models.chat_models import BaseChatModel
 _PROVIDER_ALIASES = {
     "openai": "openai",
     "google": "google",
-    "google_genai": "google",
-    "google_vertexai": "google",
     "gemini": "google",
     "anthropic": "anthropic",
     "claude": "anthropic",
+    "ollama": "ollama",
+    "local": "local",  # Generic OpenAI-compatible local server (LM Studio, vLLM)
 }
 
 
 def _parse_model_name(raw: str) -> tuple[str, str]:
-    """
-    Parse 'provider:model' string.
-    Returns (provider, model_name). Defaults to 'openai' if no prefix.
-    """
     if ":" in raw:
         provider_raw, model_name = raw.split(":", 1)
         provider = _PROVIDER_ALIASES.get(provider_raw.lower(), provider_raw.lower())
@@ -40,23 +36,17 @@ def _parse_model_name(raw: str) -> tuple[str, str]:
 def create_llm(
     model_name: str,
     api_key: str,
+    base_url: str | None = None,
     temperature: float = 0.0,
 ) -> BaseChatModel:
     """
     Create a LangChain chat model based on the provider prefix.
 
     Args:
-        model_name: Model identifier, optionally prefixed with provider
-                    (e.g. "openai:gpt-4o-mini", "google:gemini-2.5-flash",
-                    "anthropic:claude-sonnet-4-20250514").
-        api_key: API key for the chosen provider.
+        model_name: "provider:model" string.
+        api_key: API key.
+        base_url: Optional base URL for local/custom endpoints.
         temperature: Sampling temperature.
-
-    Returns:
-        A LangChain BaseChatModel instance.
-
-    Raises:
-        ValueError: If the provider is not supported.
     """
     provider, model = _parse_model_name(model_name)
 
@@ -66,6 +56,7 @@ def create_llm(
             model=model,
             temperature=temperature,
             api_key=api_key,
+            base_url=base_url,
         )
 
     elif provider == "google":
@@ -82,12 +73,31 @@ def create_llm(
             model=model,
             temperature=temperature,
             api_key=api_key,
+            base_url=base_url,
+        )
+
+    elif provider == "ollama":
+        from langchain_ollama import ChatOllama
+        # Default Ollama URL if not provided
+        base_url = base_url or "http://localhost:11434"
+        return ChatOllama(
+            model=model,
+            temperature=temperature,
+            base_url=base_url,
+        )
+
+    elif provider == "local":
+        # Use ChatOpenAI client but point to local server (e.g. LM Studio)
+        from langchain_openai import ChatOpenAI
+        base_url = base_url or "http://localhost:1234/v1"
+        return ChatOpenAI(
+            model=model,
+            temperature=temperature,
+            api_key=api_key or "lm-studio",
+            base_url=base_url,
         )
 
     else:
         supported = sorted(set(_PROVIDER_ALIASES.values()))
-        raise ValueError(
-            f"Unsupported LLM provider '{provider}'. "
-            f"Supported providers: {supported}. "
-            f"Use format 'provider:model_name' in LLM_MODEL_NAME."
-        )
+        raise ValueError(f"Unsupported provider '{provider}'. Supported: {supported}")
+

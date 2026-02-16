@@ -119,6 +119,7 @@ def create_talent_agent():
     llm = create_llm(
         model_name=settings.llm_model_name,
         api_key=settings.llm_api_key,
+        base_url=settings.llm_base_url,
         temperature=settings.llm_temperature,
     )
 
