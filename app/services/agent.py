@@ -1,19 +1,20 @@
 """
 Talent Matching Agent.
-Uses LangChain + OpenAI to orchestrate candidate search and job matching
+Uses LangChain to orchestrate candidate search and job matching
 across multiple sources: local CV database, Ciklum careers, and LinkedIn.
+Supports OpenAI, Google Gemini, and Anthropic Claude via LLM_MODEL_NAME config.
 """
 
 import json
 import httpx
 from typing import Optional
 
-from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
 from langgraph.prebuilt import create_react_agent
 
 from app.config import get_settings
+from app.services.llm_factory import create_llm
 from app.services.ciklum_jobs import search_ciklum_jobs
 from app.services.linkedin_jobs import search_linkedin_jobs
 
@@ -115,10 +116,10 @@ def create_talent_agent():
     """Create and return the talent matching agent."""
     settings = get_settings()
 
-    llm = ChatOpenAI(
-        model=settings.llm_model_name,
-        temperature=settings.llm_temperature,
+    llm = create_llm(
+        model_name=settings.llm_model_name,
         api_key=settings.llm_api_key,
+        temperature=settings.llm_temperature,
     )
 
     agent = create_react_agent(
@@ -128,6 +129,25 @@ def create_talent_agent():
     )
 
     return agent
+
+
+def _extract_text_content(content) -> str:
+    """
+    Normalize message content to a plain string.
+    OpenAI returns a str, but Gemini/Anthropic may return a list of
+    content blocks like [{'type': 'text', 'text': '...'}].
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "text":
+                parts.append(block["text"])
+            elif isinstance(block, str):
+                parts.append(block)
+        return "\n".join(parts)
+    return str(content)
 
 
 async def run_talent_agent(query: str) -> str:
@@ -152,6 +172,7 @@ async def run_talent_agent(query: str) -> str:
     messages = result.get("messages", [])
     for msg in reversed(messages):
         if msg.type == "ai" and msg.content:
-            return msg.content
+            return _extract_text_content(msg.content)
 
     return "Agent did not produce a response."
+
