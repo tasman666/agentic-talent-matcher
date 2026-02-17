@@ -12,8 +12,8 @@ graph TD
 
     %% Agent logic and Tools
     subgraph Agentic Workflow
-        Agent -->|Reasoning| LLM[LLM Provider (Ollama/OpenAI)]
-        Agent -->|Search Candidates| Qdrant[(Qdrant Vector DB)]
+        Agent -->|Reasoning| LLM["LLM Provider (Ollama/OpenAI)"]
+        Agent -->|Search Candidates| Qdrant[("Qdrant Vector DB")]
         Agent -->|Find Jobs| Ciklum[Ciklum Career Portal]
         Agent -->|Find Jobs| LinkedIn[LinkedIn Search]
         Agent -->|Publish Post| Publisher[LinkedIn API]

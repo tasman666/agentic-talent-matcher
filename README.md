@@ -74,8 +74,9 @@ The UI will open in your browser (usually `http://localhost:8501`).
 - Use the **Upload CVs** sidebar in the UI to upload PDF resumes.
 - Alternatively, generate sample CVs for testing:
   ```bash
-  python generate_samples.py
+  python scripts/generate_samples.py
   ```
+  The generated files will be located in the `sample_cvs` directory.
 
 ### 4. Ask the Agent
 - "Find a Senior Java Developer and matching Ciklum jobs."
