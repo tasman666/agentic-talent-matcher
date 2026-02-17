@@ -1,0 +1,41 @@
+graph TD
+    %% User Interaction
+    User([User]) -->|Chat/Upload| UI[Streamlit UI]
+    UI -->|HTTP Requests| API[FastAPI Backend]
+
+    %% Backend Services Layer
+    subgraph Backend Services
+        API -->|Create Agent| Agent[Talent Matching Agent]
+        API -->|Evaluate Response| Evaluator[Evaluation Service]
+        API -->|Process CV| Indexer[CV Indexing Service]
+    end
+
+    %% Agent logic and Tools
+    subgraph Agentic Workflow
+        Agent -->|Reasoning| LLM[LLM Provider (Ollama/OpenAI)]
+        Agent -->|Search Candidates| Qdrant[(Qdrant Vector DB)]
+        Agent -->|Find Jobs| Ciklum[Ciklum Career Portal]
+        Agent -->|Find Jobs| LinkedIn[LinkedIn Search]
+        Agent -->|Publish Post| Publisher[LinkedIn API]
+    end
+
+    %% Evaluation Logic
+    subgraph Evaluation
+        Evaluator -->|Judge Response| LLM_Judge[Evaluation LLM]
+        LLM_Judge -.->|Relevance, Clarity, Accuracy| UI
+    end
+
+    %% Ingestion Pipeline
+    subgraph Ingestion Pipeline
+        Indexer -->|Extract Text| PDF[PDF Processor]
+        PDF -->|Chunk & Embed| Embedder[Semantic Embedder]
+        Embedder -->|Store Vectors| Qdrant
+    end
+
+    %% Styles
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style UI fill:#bbf,stroke:#333,stroke-width:2px
+    style API fill:#dfd,stroke:#333,stroke-width:2px
+    style Agent fill:#fdd,stroke:#333,stroke-width:2px
+    style Qdrant fill:#ff9,stroke:#333,stroke-width:2px
+    style LLM fill:#eef,stroke:#333,stroke-width:2px
