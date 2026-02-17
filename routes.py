@@ -85,11 +85,4 @@ async def evaluate_match(
     # or just return it directly if fields align.
     # Our schema structure matches the service output structure.
     
-    return EvaluationResponse(
-        metrics=EvaluationResult(
-            relevance=result.relevance,
-            clarity=result.clarity,
-            accuracy=result.accuracy,
-            overall=result.overall_score
-        )
-    )
+    return EvaluationResponse(metrics=result)
