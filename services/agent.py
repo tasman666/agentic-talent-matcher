@@ -105,6 +105,10 @@ def publish_linkedin_post(topic: str = "Self-introduction") -> str:
         "Proud to be a part of this journey with @Ciklum!\n\n"
         "#AI #Recruitment #LangChain #CiklumAIAcademy #Innovation"
     )
+    
+    # Append timestamp to avoid duplicate content errors (422)
+    from datetime import datetime
+    post_content += f"\n\n(Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')})"
 
     # 2. Check for credentials to publish
     settings = get_settings()
@@ -191,7 +195,7 @@ If the user asks you to write a LinkedIn post about yourself, the project, or yo
 - **FORBIDDEN**: You are NOT allowed to write the text of the post yourself.
 - **MANDATORY ACTION**: You MUST call the `publish_linkedin_post` tool.
 - The tool will handle drafting and publishing. Your job is ONLY to trigger it.
-- **FINAL ANSWER**: Your final answer MUST be the exact output returned by the tool. Do NOT add any introductory text or commentary.
+- **FINAL ANSWER**: Your final answer MUST start with the content returned by the tool (e.g. "✅ **Successfully published..."). Do NOT add any introductory text like "Here is the output" or "I have triggered it". Just output the tool result.
 
 **Guidelines:**
 - be concise but thorough.
