@@ -124,9 +124,13 @@ def publish_linkedin_post(topic: str = "Self-introduction") -> str:
         "X-Restli-Protocol-Version": "2.0.0",
     }
     
+    
+    # Clean URN if user pasted full urn string
+    user_urn = settings.linkedin_user_urn.replace("urn:li:person:", "")
+    
     # LinkedIn UGC Post Payload
     payload = {
-        "author": f"urn:li:person:{settings.linkedin_user_urn}",
+        "author": f"urn:li:person:{user_urn}",
         "lifecycleState": "PUBLISHED",
         "specificContent": {
             "com.linkedin.ugc.ShareContent": {
@@ -148,7 +152,12 @@ def publish_linkedin_post(topic: str = "Self-introduction") -> str:
             resp.raise_for_status()
             data = resp.json()
             post_id = data.get("id", "Unknown ID")
-            return f"✅ **Successfully published to LinkedIn!**\nPost ID: {post_id}\n\nContent:\n{post_content}"
+            post_url = f"https://www.linkedin.com/feed/update/{post_id}/"
+            return (
+                f"✅ **Successfully published to LinkedIn!**\n"
+                f"View Post: {post_url}\n"
+                f"Content:\n{post_content}"
+            )
             
     except Exception as e:
         return f"❌ Failed to publish to LinkedIn: {str(e)}\n\nDraft content was:\n{post_content}"
@@ -180,12 +189,16 @@ You have access to the following tools:
 
 **SECONDARY WORKFLOW (Self-Promotion):**
 If the user asks you to write a LinkedIn post about yourself, the project, or your capabilities:
-- Use the `publish_linkedin_post` tool to generate and publish the content.
+- **FORBIDDEN**: You are NOT allowed to write the text of the post yourself.
+- **MANDATORY ACTION**: You MUST call the `publish_linkedin_post` tool.
+- The tool will handle drafting and publishing. Your job is ONLY to trigger it.
+- **FINAL ANSWER**: Your final answer MUST be the exact output returned by the tool. Do NOT add any introductory text or commentary.
 
 **Guidelines:**
 - be concise but thorough.
 - default to searching ALL sources unless explicitly restricted.
 - Use multiple search queries if initial results are sparse.
+- **NEVER** simulate a tool call by typing JSON. You must execute the tool.
 """
 
 TOOLS = [search_candidates, find_ciklum_jobs, find_linkedin_jobs, publish_linkedin_post]
@@ -205,7 +218,6 @@ def create_talent_agent():
     agent = create_react_agent(
         model=llm,
         tools=TOOLS,
-        prompt=SYSTEM_PROMPT,
     )
 
     return agent
@@ -242,10 +254,17 @@ async def run_talent_agent(query: str) -> str:
     Returns:
         The agent's final response as a string.
     """
+    from langchain_core.messages import SystemMessage  # Import locally to avoid clutter
+    
     agent = create_talent_agent()
 
+    messages = [
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessage(content=query)
+    ]
+
     result = await agent.ainvoke(
-        {"messages": [HumanMessage(content=query)]},
+        {"messages": messages},
     )
 
     # Extract the final AI message
