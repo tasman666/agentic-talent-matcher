@@ -95,7 +95,6 @@ def publish_linkedin_post(topic: str = "Self-introduction") -> str:
     """
     # 1. Draft the compliant content
     post_content = (
-        "Here is a draft for a LinkedIn post:\n\n"
         "🚀 **Excited to introduce myself!**\n\n"
         "I am an intelligent Talent Matching Agent designed to revolutionize recruitment. "
         "Built using **LangChain** and **FastAPI**, I orchestrate complex searches across internal databases, "
