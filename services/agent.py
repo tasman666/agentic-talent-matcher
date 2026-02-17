@@ -81,6 +81,79 @@ def find_linkedin_jobs(
     return json.dumps(jobs, indent=2)
 
 
+@tool
+def publish_linkedin_post(topic: str = "Self-introduction") -> str:
+    """
+    Generate and PUBLISH a professional LinkedIn post about this AI Agent.
+    
+    The post content is pre-approved: explains the agent's purpose,
+    how it was built (LangChain/FastAPI/Qdrant), mentions 'Ciklum AI Academy',
+    and tags @Ciklum.
+    
+    If 'LINKEDIN_ACCESS_TOKEN' is configured, this tool will actually POST
+    to the user's LinkedIn profile. Otherwise, it returns the draft text.
+    """
+    # 1. Draft the compliant content
+    post_content = (
+        "Here is a draft for a LinkedIn post:\n\n"
+        "🚀 **Excited to introduce myself!**\n\n"
+        "I am an intelligent Talent Matching Agent designed to revolutionize recruitment. "
+        "Built using **LangChain** and **FastAPI**, I orchestrate complex searches across internal databases, "
+        "Ciklum's career portal, and LinkedIn to find the perfect candidate-job fit.\n\n"
+        "My creation was driven by the innovative spirit of the **Ciklum AI Academy**, where advanced "
+        "agentic workflows come to life. I leverage hybrid vector search (Qdrant) and LLM reasoning "
+        "to deliver precise, context-aware recommendations faster than ever.\n\n"
+        "Proud to be a part of this journey with @Ciklum!\n\n"
+        "#AI #Recruitment #LangChain #CiklumAIAcademy #Innovation"
+    )
+
+    # 2. Check for credentials to publish
+    settings = get_settings()
+    if not settings.linkedin_access_token or not settings.linkedin_user_urn:
+        return (
+            f"{post_content}\n\n"
+            "*(Note: Real posting skipped. Set LINKEDIN_ACCESS_TOKEN and "
+            "LINKEDIN_USER_URN in .env to enable auto-posting using the API)*"
+        )
+
+    # 3. Publish to LinkedIn API
+    api_url = "https://api.linkedin.com/v2/ugcPosts"
+    headers = {
+        "Authorization": f"Bearer {settings.linkedin_access_token}",
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0",
+    }
+    
+    # LinkedIn UGC Post Payload
+    payload = {
+        "author": f"urn:li:person:{settings.linkedin_user_urn}",
+        "lifecycleState": "PUBLISHED",
+        "specificContent": {
+            "com.linkedin.ugc.ShareContent": {
+                "shareCommentary": {
+                    "text": post_content.replace("**", "") # Remove markdown bold for plain text API
+                },
+                "shareMediaCategory": "NONE"
+            }
+        },
+        "visibility": {
+            "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+        }
+    }
+
+    try:
+        import httpx
+        with httpx.Client(timeout=30.0) as client:
+            resp = client.post(api_url, headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            post_id = data.get("id", "Unknown ID")
+            return f"✅ **Successfully published to LinkedIn!**\nPost ID: {post_id}\n\nContent:\n{post_content}"
+            
+    except Exception as e:
+        return f"❌ Failed to publish to LinkedIn: {str(e)}\n\nDraft content was:\n{post_content}"
+
+
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
@@ -89,27 +162,30 @@ SYSTEM_PROMPT = """\
 You are a Talent Matching Agent for a recruitment company. Your goal is to
 help recruiters find the best job opportunities for their candidates.
 
-Given information about a candidate (skills, experience, preferences), you should:
+You have access to the following tools:
+1. `search_candidates`: Search internal CV database.
+2. `find_ciklum_jobs`: Search Ciklum jobs.
+3. `find_linkedin_jobs`: Search LinkedIn jobs.
+4. `publish_linkedin_post`: Publish (or draft) a LinkedIn post about yourself.
 
-1. **Search the internal CV database** to find matching candidate profiles
-   using the search_candidates tool.
-2. **Search Ciklum's job board** for relevant open positions using
-   the find_ciklum_jobs tool.
-3. **Search LinkedIn** for additional job opportunities using the
-   find_linkedin_jobs tool.
+**CORE WORKFLOW (Talent Matching):**
+1. **Understand Constraints**: First, identify if the user specified a particular source (e.g., "only Ciklum jobs", "just internal candidates").
+2. **Execute Searches**:
+   - If **NO source specified**: Search ALL three: Internal DB (`search_candidates`), Ciklum (`find_ciklum_jobs`), and LinkedIn (`find_linkedin_jobs`).
+   - If **Specific Source(s)**: Search ONLY the requested source(s).
+3. **Synthesize Results**: Provide a comprehensive summary of findings from the searched sources.
 
-After gathering results from all sources, provide a comprehensive summary:
-- List the most relevant candidates found in the database
-- List the best matching Ciklum jobs with links
-- List the best matching LinkedIn jobs with links
-- Provide a brief recommendation on the best matches
+**SECONDARY WORKFLOW (Self-Promotion):**
+If the user asks you to write a LinkedIn post about yourself, the project, or your capabilities:
+- Use the `publish_linkedin_post` tool to generate and publish the content.
 
-Be concise but thorough. Always search ALL three sources before providing
-your final answer (unless query specify only one specificsource). Use multiple search queries if the initial results
-aren't specific enough.
+**Guidelines:**
+- be concise but thorough.
+- default to searching ALL sources unless explicitly restricted.
+- Use multiple search queries if initial results are sparse.
 """
 
-TOOLS = [search_candidates, find_ciklum_jobs, find_linkedin_jobs]
+TOOLS = [search_candidates, find_ciklum_jobs, find_linkedin_jobs, publish_linkedin_post]
 
 
 def create_talent_agent():

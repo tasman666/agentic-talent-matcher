@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     # --- Vector Store ---
     vector_store_collection: str = "candidates"
 
+    # --- LinkedIn ---
+    linkedin_access_token: str | None = None
+    linkedin_user_urn: str | None = None
+
 
 @lru_cache
 def get_settings() -> Settings:
